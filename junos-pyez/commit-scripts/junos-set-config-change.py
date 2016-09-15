@@ -1,63 +1,51 @@
-#Mike_Wazowski
-'''
-  \`"-.
-   )  _`-.
-  ,  : `. \
-  : _   '  \
-  ; *` _.   `--._
-  `-.-'          `-.
-    |       `       `.
-    :.       .        \
-    | \  .   :   .-'   .
-    :  )-.;  ;  /      :
-    :  ;  | :  :       ;-.
-    ; /   : |`-:     _ `- )
- ,-' /  ,-' ; .-`- .' `--'
- `--'   `---' `---' 
-  _                    _ _            
- | |__   __ _ ___  ___| (_)_ __   ___ 
- | '_ \ / _` / __|/ _ \ | | '_ \ / _ \
- | |_) | (_| \__ \  __/ | | | | |  __/
- |_.__/ \__,_|___/\___|_|_|_| |_|\___|                                      
-'''
-
 #This is a list of script specific modules that we are importing
+import os
+import sys
+import getpass
+import datetime
+import pyping
+import colorama
+
+from termcolor import colored
+from termcolor import cprint
+from lxml import etree
+
 from jnpr.junos import Device
-from jnpr.junos.utils.config import Config 
+from jnpr.junos.utils.config import Config
 from jnpr.junos.exception import *
 from jnpr.junos.facts import *
-from lxml import etree
-from termcolor import *
-import colorama
-import datetime
-import getpass
-import pyping
-import sys
-import os
 
 # This points to the location of an IP list
 location = raw_input("""
 
-Select location:""")
+Select location: """)
 
 
 # Used to bring color to the sad/dead console of a windows machine
 colorama.init()
 
-bold_green = lambda x: cprint(x, 'green', attrs=['bold'])
-green = lambda x: cprint(x, 'green')
-yellow = lambda x: cprint(x, 'yellow', attrs=['bold'])
-red = lambda x: cprint(x, 'red', attrs=['bold'], file=sys.stderr)
+def bold_green(x):
+	""" prints the contents of 'x' in bold green color """
+	return cprint(x, 'green', attrs=['bold'])
+def green(x):
+	""" prints the contents of 'x' in light green color """
+	return cprint(x, 'green')
+def yellow(x):
+	""" prints the contents of 'x' in bold yellow color """
+	return cprint(x, 'yellow', attrs=['bold'])
+def red(x):
+	""" prints the contents of 'x' in bold red color """
+	return cprint(x, 'red', attrs=['bold'], file=sys.stderr)
 
 #The username is specified here and you will be prompted for a password.
 #getpass.getuser
 username = raw_input('Username:')
 password = getpass.getpass("Password:")
 
-fail_log = 'junos-config-change-error-report-%s.txt' % location
+fail_log = 'junos-config-change-error-report-{0}.txt'.format(location)
 
 #This is the 'out-file' that the script writes results to
-f = open('junos-config-change-results-%s.txt' % location, 'w')
+f = open('junos-config-change-results-{0}.txt'.format(location), 'w')
 
 fail = open(fail_log, 'a')
 
@@ -291,7 +279,7 @@ def update_config(host):
 	print ""
 
 #This is used to loop through every host entry in the list specified
-with open('C:\\ip_lists/%s-list.txt' % location) as infile:  
+with open('C:\\ip_lists/{0}-list.txt'.format(location)) as infile:  
 	for host in infile:
 
 		#This is used to test connectivity to a host before attempting to connect
