@@ -15,7 +15,7 @@ from jnpr.junos.utils.config import Config
 from jnpr.junos.exception import *
 from jnpr.junos.facts import *
 
-# This points to the location of an IP list
+# This points to the location of an IP list. See line 286
 location = raw_input("""
 
 Select location: """)
@@ -38,7 +38,6 @@ def red(x):
 	return cprint(x, 'red', attrs=['bold'], file=sys.stderr)
 
 #The username is specified here and you will be prompted for a password.
-#getpass.getuser
 username = raw_input('Username:')
 password = getpass.getpass("Password:")
 
@@ -67,16 +66,21 @@ def update_config(host):
 		locationstrip = locationstring.replace("<location>", "").replace("</location>\n", "")
 		return locationstrip
 
+	def commit_fail():
+		fail.write("Commit check did NOT pass {0} ".format(err) + '\n')
+		f.write("Commit check did NOT pass! {0} ".format(err) + '\n')
+		print "Commit check did NOT pass! Check log file for more"
+
 	model = dev.facts['model']
 
 	f.write("-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-" + '\n')
 	f.write("Working on: " + host + '\n')
 	f.write(snmp_location() + '\n')
-	print "Working on:", host
-	print snmp_location()
+	print("Working on:"), host
+	print(snmp_location())
 	f.write(date_time() + '\n')
-	print datetime.datetime.now()
-	print "Model:", model 
+	print(datetime.datetime.now())
+	print("Model:"), model 
 	f.write("Model: " + model + '\n')
 
 	#This binds Config to dev
@@ -99,7 +103,7 @@ def update_config(host):
 	"""
 
 	f.write("Locking the configuration..." + '\n')
-	print "Locking the configuration..."
+	print("Locking the configuration...")
     
 	#This command locks the configuration for a 'configure exclusive'
 	try:
@@ -113,7 +117,7 @@ def update_config(host):
 		red("Error: Unable to lock configuration...")
 
 	f.write("Checking for uncommitted configuration changes..." + '\n')
-	print "Checking for uncommitted configuration changes..."
+	print("Checking for uncommitted configuration changes...")
 
 	#This command is the equivilant of 'show | compare'
 	if cu.diff() == None:
@@ -195,9 +199,7 @@ def update_config(host):
 		f.write("Commit check passed" + '\n')
 		print "Commit check passed with 0 errors"
 	except CommitError as err:
-		fail.write("Commit check did NOT pass {0} ".format(err) + '\n')
-		f.write("Commit check did NOT pass! {0} ".format(err) + '\n')
-		print "Commit check did NOT pass! Check log file for more"
+		commit_fail()
 		return
 	except RpcError as err:
 		fail.write("Commit check did NOT pass {0} ".format(err) + '\n')
