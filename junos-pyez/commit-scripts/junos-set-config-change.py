@@ -51,13 +51,16 @@ fail = open(fail_log, 'a')
 
 #The main function 'update_config' is defined below
 def update_config(host):
+	""" This is our main function """
 
 	def date_time():
+		""" this function returns a readable time stamp """
 		date = str(datetime.datetime.now())
 		return date
 
 	# This function has been known to cause timeout errors and is probably not the best way to get the location
 	def snmp_location():
+		""" this function grabs the location information from SNMP """ 
 		data = dev.rpc.get_config()
 		location = data.xpath('//location')
 		locationstring = etree.tostring(location[0])
@@ -83,6 +86,7 @@ def update_config(host):
 
 	#This is where the ping function is defined. This function is used later in the script to test connectivity to the SRX
 	def pingtest(host):
+		""" this function pings a host and returns true or false (response or drop) """
 		r = pyping.ping(host.strip())
 		if r.ret_code is 0:
 			return True
