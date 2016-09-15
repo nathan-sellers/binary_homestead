@@ -29,13 +29,13 @@ The script loops over a list of IPs and follows these steps to apply configurati
 ## Results
 The results of the script are printed on the console screen and are also logged to a file. The results file will be named according to what you entered in the `location` variable. The 'Results' folder contains subfolders that hold the results of a particular script and the IR that it relates to.
 ```python
-f = open('junos-config-change-results-%s.txt' % location, 'w') 
+f = open('junos-config-change-results-{0}.txt'.format(location), 'w') 
 ```
 An error file is also generated at the start of every script run. When a script finishes running it checks the error file to see if it is empty. If the error file is empty the script automatically deletes it. 
 
 The code responsible for creating the error file:
 ```python
-fail_log = 'junos-config-change-error-report-%s.txt' % location
+fail_log = 'junos-config-change-error-report-{0}.txt'.format(location)
 ```
 An example of the script output can be viewed by clicking on the "_junos-config-change-results.txt_" file
 
