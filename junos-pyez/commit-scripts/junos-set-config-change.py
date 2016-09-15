@@ -57,6 +57,9 @@ def update_config(host):
 		date = str(datetime.datetime.now())
 		return date
 
+	def error_message():
+		return "Error: {0}".format(err)
+
 	# This function has been known to cause timeout errors and is probably not the best way to get the location
 	def snmp_location():
 		""" this function grabs the location information from SNMP """ 
@@ -65,11 +68,6 @@ def update_config(host):
 		locationstring = etree.tostring(location[0])
 		locationstrip = locationstring.replace("<location>", "").replace("</location>\n", "")
 		return locationstrip
-
-	def commit_fail():
-		fail.write("Commit check did NOT pass {0} ".format(err) + '\n')
-		f.write("Commit check did NOT pass! {0} ".format(err) + '\n')
-		print "Commit check did NOT pass! Check log file for more"
 
 	model = dev.facts['model']
 
@@ -113,8 +111,8 @@ def update_config(host):
 	except (KeyboardInterrupt, SystemExit):
 		raise
 	except LockError as err:
-		f.write("Error: Unable to lock configuration: {0} ".format(err) + '\n')
-		red("Error: Unable to lock configuration...")
+		f.write(error_message() + '\n')
+		red(error_message())
 
 	f.write("Checking for uncommitted configuration changes..." + '\n')
 	print("Checking for uncommitted configuration changes...")
@@ -133,52 +131,52 @@ def update_config(host):
 			green("Configuration has been rolled back!")
 			try:
 				f.write("Double checking 'show | compare'" + '\n')
-				print "Double checking 'show | compare'"
+				print("Double checking 'show | compare'")
 				if cu.diff() == None:
 					try:
-						print "Locking configuration..."
+						print("Locking configuration...")
 						cu.lock() #This command is used to lock the configuration in the event that the first
 						f.write("Configuration locked" + '\n') #configuiration lock failed due to uncommitted configuration changes
-						print "Configuration locked" 
+						print("Configuration locked") 
 					except (KeyboardInterrupt, SystemExit):
 						raise
 					except LockError as err:
-						f.write("Unable to lock configuration: {0} ".format(err) + '\n')
-						red("Error: Unable to lock configuration!")
-						f.write("Exiting this device immediately!" + '\n')
-						print "Exiting this device immediately!"
+						f.write(error_message() + '\n')
+						red(error_message())
+						f.write(error_message() + '\n')
+						print(error_message())
 						return
 				else:
 					fail.write("There were problems removing the pending configuration changes on " + hostname + '\n')
 					f.write("There were problems removing the pending configuration changes" + '\n')
 					f.write("Exiting now..." + '\n')
-					print "There were problems removing the pending configuration changes"
-					print "Exiting now"
+					print("There were problems removing the pending configuration changes")
+					print("Exiting now")
 					return
 
 			except (KeyboardInterrupt, SystemExit):
 				raise
-			except:
-				fail.write("There were probelms running 'show | compare' on " + hostname + '\n')
-				f.write("There were errors running 'show | compare' " + '\n')
+			except Exception as err:
+				fail.write(error_message() '\n')
+				f.write(error_message() + '\n')
 				f.write("Exiting device immediately" + '\n')
-				print "There were errors running 'show | compare' "
-				print "Exiting now"
+				print(error_message())
+				print("Exiting now")
 				return
 
 		except (KeyboardInterrupt, SystemExit):
 			raise
-		except:
-			fail.write("Failed to rollback on " + hostname + '\n')
-			f.write("Failed to rollback..." + '\n')
+		except Exception as err:
+			fail.write(error_message() '\n')
+			f.write(error_message() + '\n')
 			f.write("Exiting this device" + '\n')
-			print "Failed to rollback..."
-			print "Exiting this device"
+			print(error_message())
+			print("Exiting this device")
 			dev.close()
 			return
 
 	f.write("Loading the configuration changes..." + '\n')
-	print "Loading the configuration changes..."
+	print("Loading the configuration changes...")
 
 	#This command loads the configuration changes. The 'merge=False' parameter means it will overwrite existing configurations
 	try:
@@ -186,103 +184,105 @@ def update_config(host):
 	except (KeyboardInterrupt, SystemExit):
 		raise
 	except ValueError as err:  
-		fail.write("Failed to load configuration changes {0} ".format(err) + '\n')                         
-		f.write("Loading the configuration changes failed: {0} ".format(err) + '\n') 
+		fail.write(error_message() + '\n')                         
+		f.write(error_message() + '\n') 
 		f.write("Exiting the device" + '\n')                       
-		red(err.message) 
+		red(error_message()) 
 		return
 
 	try:
 		f.write("Checking commit..." + '\n')
-		print "Checking commit..."
+		print("Checking commit...")
 		cu.commit_check()
 		f.write("Commit check passed" + '\n')
-		print "Commit check passed with 0 errors"
+		print("Commit check passed with 0 errors")
 	except CommitError as err:
-		commit_fail()
+		fail.write(error_message())
+		f.write(error_message())
+		print(error_message())
 		return
 	except RpcError as err:
-		fail.write("Commit check did NOT pass {0} ".format(err) + '\n')
-		f.write("Commit check did NOT pass! {0} ".format(err) + '\n')
-		print "Commit check did NOT pass! Check log file for more"
+		fail.write(error_message() + '\n')
+		f.write(error_message() + '\n')
+		print(error_message())
 		return
 
 	f.write("Committing the configuration..." + '\n')
-	print "Committing the configuration changes..."
+	print("Committing the configuration changes...")
 
 	#This command commits the config with a comment and 1 minute to confirm
 	try:
 		cu.commit(confirm=1)
 		f.write("Commit confirm 1 successful!" + '\n')
 		bold_green("Commit confirm 1 successful!"),
-		print "Verifying connectivity..."
+		print("Verifying connectivity...")
 	except (KeyboardInterrupt, SystemExit):
 		raise
 	except CommitError as err:
-		fail.write("Commit failed or broke connectivity: {0} ".format(err) + '\n')
-		f.write("Commit failed or broke conectivity: {0} ".format(err) + '\n')
+		fail.write(error_message() + '\n')
+		f.write(error_message() + '\n')
 		f.write("Pinging to verify..." + '\n')
-		red("Commit failed or broke connectivity")
-		print "Pinging to verify..."
+		red(error_message())
+		print("Pinging to verify...")
 	except RpcTimeoutError as err:
-		fail.write("Commit failed or broke connectivity: {0} ".format(err) + '\n')
-		f.write("Commit failed or broke conectivity: {0} ".format(err) + '\n')
+		fail.write(error_message() + '\n')
+		f.write(error_message() + '\n')
 		f.write("Pinging to verify..." + '\n')
-		red("Commit failed or broke connectivity")
-		print "Pinging to verify..."
+		red(error_message())
+		print("Pinging to verify...")
 
 	#This command is used to ping the host to see if applying the configuration broke the connectivity
 	if pingtest(host) is True:  
 		f.write(host.strip() + " looks up from here" + '\n')
 		f.write("Confirming the configuration..." + '\n')
-		print host.strip() ,"Looks UP from here"
-		print "Confirming the configuration..."
+		print(host.strip() ,"Looks UP from here")
+		print("Confirming the configuration...")
 		try:
 			cu.commit(comment="junos-rootpswd-change") #If the ping succeeds it issues a 'commit confirm'
 			f.write("Configuration was confirmed!" + '\n')
 			f.write("Unlocking the configuration..." + '\n')
 			bold_green("Configuration was confirmed!") 
-			print "Unlocking the configuration..."                                          
+			print("Unlocking the configuration...")                                          
 			try:
 				cu.unlock() #This command unlocks the configuration
 			except (KeyboardInterrupt, SystemExit):
 				raise
 			except UnlockError as err:
-				f.write("Unlocking the configuration failed: {0} ".format(err) + '\n')
-				red("Unlocking the configuration failed")
+				f.write(error_message() + '\n')
+				red(error_message())
 
 			f.write("Closing connection to " + hostname + '\n')
-			print "Closing the connection to", hostname
+			print("Closing the connection to", hostname)
 			try:
 				dev.close() #This command closes the device connection 
 			except (KeyboardInterrupt, SystemExit):
 				raise
 			except:
 				f.write("Failed to close " + hostname + '\n')
-				print "Failed to close", hostname
+				print("Failed to close", hostname)
 
 		except (KeyboardInterrupt, SystemExit):
 			raise
 		except CommitError as err:
-			fail.write("Commit failed: {0} ".format(err) + '\n')
-			f.write("Failed to commit changes: {0} ".format(err) + '\n')
-			print "Failed to commit the changes"
+			fail.write(error_message() + '\n')
+			f.write(error_message() + '\n')
+			print(error_message())
 		except RpcTimeoutError as err:
-			print "RPC timeout error!"
-			f.write("RPC timeout error!" + '\n')
-			fail.write("RPC timeout error!" + '\n')
+			print(error_message())
+			f.write(error_message() + '\n')
+			fail.write(error_message() + '\n')
 	else:  #This detects ping failure. If the ping fails, the script will exit the current host without confirming
 		f.write(host.strip() + " looks DOWN from here..." + '\n') #the commit and the configuration will rollback in 1 minute
 		fail.write(host + "looks down from here" + '\n')
 		f.write("Moving on to the next host..." + '\n')        
-		print host ,"looks down from here..."
-		print "Moving on to the next host..."
+		print(host ,"looks down from here...")
+		print("Moving on to the next host...")
 
 	f.write("Completed: " + hostname + '\n' )
 	f.write("-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-" + '\n')
 	f.write('\n')
-	print "Completed:", hostname 
-	print ""
+	print("Completed:", hostname) 
+	print("")
 
 #This is used to loop through every host entry in the list specified
 with open('C:\\ip_lists/{0}-list.txt'.format(location)) as infile:  
@@ -295,9 +295,9 @@ with open('C:\\ip_lists/{0}-list.txt'.format(location)) as infile:
 		except (KeyboardInterrupt, SystemExit):
 			raise
 		except ConnectError as err:
-			fail.write("Error: Cannot connect to device {0} ".format(err) + '\n')                                           
-			f.write("Error: Cannot connect to device: {0} ".format(err) + '\n')
-			yellow("Error: Cannot connect to device: {0} ".format(err))
+			fail.write(error_message() + '\n')                                           
+			f.write(error_message() + '\n')
+			yellow(error_message())
 			continue
 		update_config(host)
 
