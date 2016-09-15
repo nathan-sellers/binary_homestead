@@ -157,7 +157,7 @@ def update_config(host):
 			except (KeyboardInterrupt, SystemExit):
 				raise
 			except Exception as err:
-				fail.write(error_message() '\n')
+				fail.write(error_message() + '\n')
 				f.write(error_message() + '\n')
 				f.write("Exiting device immediately" + '\n')
 				print(error_message())
